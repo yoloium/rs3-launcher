@@ -26,6 +26,16 @@ gcc - gcc - compile the program
 git clone https://github.com/yoloium/rs3-launcher.git
 cd rs3-launcher
 gcc -pthread rs3-launcher.c -o launcher -ldl
+```
+DO NOT RUN THE CLIENT YET
+Open rs3-launcher in your favourite text editor e.g.
+```
+vim rs3-launcher
+```
+and edit the configuration at the top of this script. If you have a non-standard cache location, you will need to change this file to reflect on where the cache is kept. 
+
+When the configuration looks good, now it's time to run the script.
+```
 ./rs3-launcher
 ```
 ## Contributing
