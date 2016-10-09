@@ -24,6 +24,7 @@ gcc - gcc - compile the program
 ### Installing
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
+cd rs3-launcher
 gcc -pthread rs3-launcher.c -o launcher -ldl
 ./rs3-launcher
 ```
@@ -37,4 +38,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-syldrathecat for https://github.com/syldrathecat/nxtlauncher. This project served as inspiration this project. It provides a lot of answers on how the client executes. 
+syldrathecat for https://github.com/syldrathecat/nxtlauncher. This project served as inspiration this project. It provides a lot of answers on how the client executes. FYI that project is very overcomplicated and over-engineered.
