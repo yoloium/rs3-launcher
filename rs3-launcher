@@ -30,6 +30,11 @@ if [ ! -d "${USER_FOLDER}/launcher/" ] ; then
 	mkdir -p "${USER_FOLDER}/launcher"
 fi
 
+# if the cache folder (e.g. never ran official client) doesn't exist, create it.
+if [ ! -d "${CACHE_FOLDER}" ] ; then
+        mkdir -p "${CACHE_FOLDER}"
+fi
+
 # Download config
 GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
 # Find the latest crc32
