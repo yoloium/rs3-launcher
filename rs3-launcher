@@ -3,7 +3,7 @@
 #CONFIGURATION
 BINARY_TYPE=4 # 3=Mac, 4=Linux
 LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portugues
-CACHE_FOLDER="/opt/nxtcache" # Where to save + load game cache
+CACHE_FOLDER="${HOME}/Jagex/RuneScape"# Where to save + load game cache
 USER_FOLDER="${HOME}/Jagex" # where to store preferences etc
 PREFERED_WORLD=26
 CLIENT_WIDTH=1024
