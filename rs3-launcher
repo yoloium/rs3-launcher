@@ -3,7 +3,7 @@
 #CONFIGURATION
 BINARY_TYPE=4 # 3=Mac, 4=Linux
 LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portugues
-CACHE_FOLDER="${HOME}/Jagex/Runescape" # Where to save + load game cache
+CACHE_FOLDER="${HOME}/Jagex/RuneScape" # Where to save + load game cache
 USER_FOLDER="${HOME}/Jagex" # where to store preferences etc
 PREFERED_WORLD=26
 CLIENT_WIDTH=1024
@@ -13,13 +13,13 @@ CLIENT_HEIGHT=768
 dl_unlzma_and_crc () {
 	echo 'Downloading librs2client.so ..'
 	# download file
-        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so?&crc=${1}"
+        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=$1"
 	# decompress file
         unlzma "${USER_FOLDER}/launcher/librs2client.so.lzma"
         # compute crc32
 	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
         # compare checksums
-	if  [ "$((0x${FILE_CRC}))" != "${1}" ]; then
+	if  [ "$((0x${FILE_CRC}))" != $1 ]; then
                 echo "librs2client.so was downloaded with mismatched checksums; exiting..."   
                 exit 1
         fi
@@ -43,11 +43,11 @@ if [ -f "${USER_FOLDER}/launcher/librs2client.so" ] ; then
 	# The downloaded crc is decimal, crc32 creates a hexadecimal value, which is converted to decimal 
 	if [ "$((0x${FILE_CRC}))" != "${DL_FILE_CRC}" ] ; then
 		rm "${USER_FOLDER}/launcher/librs2client.so"
-        	dl_unzlma_and_crc "${DL_FILE_CRC}"
+        	dl_unlzma_and_crc "${DL_FILE_CRC}"
         fi
 else
 	# download librs2client.so if we don't have it
-	dl_unzlma_and_crc "${DL_FILE_CRC}"
+	dl_unlzma_and_crc "$DL_FILE_CRC"
 fi
 
 # each param appends '"key" "value" '; if value is null, "value" = ""	
