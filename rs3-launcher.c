@@ -1,5 +1,3 @@
-// #define ENABLE_X11 true
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,13 +7,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdint.h>
+#include <endian.h>
 
-/*
-#ifdef ENABLE_X11
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#endif
-*/
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
 struct ipc_args {
@@ -24,93 +17,70 @@ struct ipc_args {
 	char* user_f;
 };
 
-// decodes recieved message ids
-unsigned int decode_short_be(const char* src){
-	const unsigned char* src_unsigned_char = (const unsigned char*) src;
-	return (unsigned int) src_unsigned_char[0] | (unsigned int) src_unsigned_char[1] << 8;
-}
-
-// encodes reply size to send
-char* encode_short_be(unsigned int src){
-	char *buf = malloc(sizeof(char) * 2);
-	buf[0] = (char) src & 0xFF;
-	buf[1] = (char) (src >> 8) & 0xFF;
-	return buf;
-}
-
-// encodes message id to send
-char* encode_short_le(unsigned int i){
-	char *buf = malloc(sizeof(i) * 2);
-        buf[0] = (char) (i >> 8) & 0xFF;
-        buf[1] = (char) i & 0xFF;
-        return buf;
+void print_message(const char *prefix, const char *msg, int length){
+	printf("%smsg[id=%02x%02x, data=", prefix, msg[0], msg[1]);
+	int i = 2;
+	while (i < length){
+		unsigned char c = msg[i];
+		printf("%02x ", c);
+		++i;
+	}
+	printf(" len=%i]\n", length-2);
 }
 
 int handle_messages(const char*msg, int length, int fd_out ,char* cache_folder, char* user_folder){
-	unsigned int id = decode_short_be(msg);
+	char msg_id[2];
+	strncpy(msg_id, msg, 2);
+	uint16_t id = le16toh(*(uint16_t*) msg_id);
+	print_message("REC: ", msg, length);
 	switch(id){
 		case 0:
 			{
+				// calculate reply size to make buffer
 				int reply_size = 17 + strlen(cache_folder) + strlen(user_folder);
 				char reply[reply_size];
+
+				// zero out memory.
 				memset(reply, 0, reply_size);
+
+				// create a pointer to pack data
 				char *dest = reply;
 				
-				char* msg_id = encode_short_le((uint16_t) 0x0001);
-				memcpy(dest, msg_id, 2);
-				free(msg_id);
+				// add message id to reply
+				uint16_t msg_id = htobe16(0x0001);
+				memcpy(dest, &msg_id, 2);
 				dest += 2;
 
+				// add these 'nessesary' bytes to reply
 				memcpy(dest, "\x00\x002\x00\x00\x00\x000", 6);
 				dest += 6;
 
-				// would encode parent window id .. but it's just 00 00 00 00 so do NOTHING
+				// would encode parent window id aka 00 00 00 00 so just move pointer
 				dest += 4;
 
+				// add cache folder to reply
 				memcpy(dest, cache_folder, strlen(cache_folder));
 				dest += strlen(cache_folder);
 				dest += 1;
 				
+				// add user folder to reply
 				memcpy(dest, user_folder, strlen(user_folder));
 				dest += strlen(user_folder);
 				dest += 1;
 
+				// add these nessesary bytes
 				memcpy(dest, "\x00\x03\x00", 3);
 				dest += 3;
-
-				char *enc_reply_size = encode_short_be(reply_size);
-				write(fd_out, enc_reply_size, 2);
-				free(enc_reply_size);	
-				
+				uint16_t enc_reply_size = htole16(reply_size);
+				// send reply size
+				write(fd_out, &enc_reply_size, 2);
+				// send reply
 				write(fd_out, reply, reply_size);			
 			}
 			break;
-		case 512: // recieved notification to set window title
-			/* DOESNT WORK FOR NOW WILL TRY AGAIN LATER
-			{
-				if(length != 10){
-					printf("Not recieved enough info to change window title.\n");
-					break;
-				}
-				char *msg_ptr = strdup(msg);
-				strcpy(msg_ptr, msg);
-				msg_ptr += 6;
-				unsigned int window_id = decode_int_le(msg_ptr);
-				printf("window_id = %i\n", window_id);
-				Display *display = XOpenDisplay(NULL);
-				if(!display){
-					printf("Couldn't open display .. w/e LUL");
-					break;
-				}
-				XChangeProperty(display, (Window) window_id, XA_WM_NAME, XA_STRING, 8, PropModeReplace, (const unsigned char*) "Roonscaep", strlen("Roonscaep"));
-				XCloseDisplay(display);				
-			}
-			*/
-			break;
 		case 3072: // recieved closing message .. break and clean up
 			return 0;
-		default:
-			//printf("Recieved a useless message! %02x%02x aka %i\n", msg[0], msg[1], id);
+		default:		
 			break;
 		return 1;
 	}
@@ -133,32 +103,38 @@ void *handle_ipc(void *args_ptr){
 	int fd_in = open(in_fifo, O_RDONLY);
 	int fd_out = open(out_fifo, O_WRONLY);
 
-	// Do FIFO logic here
+	// Do FIFO read/write here 
 	while(1){
 		char buf[2];
+		// read message size
 		if(!read(fd_in, buf, sizeof buf)){
 			perror("Communication ended with client.");
 			break;
 		}
-		int length = decode_short_be(buf);
-		char msg[length];
-		if(!read(fd_in, msg, length)){
+
+		// create message buffer then read message
+		uint16_t msg_len = le16toh(*(uint16_t *) buf);
+		
+		if(msg_len < 2){
+			perror("Message size recieved was too small.");
+			break;
+		}
+		
+		char msg[msg_len];
+		if(!read(fd_in, msg, msg_len)){
 			break;
 		}
 
-		if(length < 2){
-			perror("Message recieved was too short to be valid");
-			break;
-		}
-		if(!handle_messages(msg, length, fd_out, args->cache_f, args->user_f)){
+		// handle message
+		if(!handle_messages(msg, msg_len, fd_out, args->cache_f, args->user_f)){
 			break;
 		}
 	}
-	// Close FIFOs as files
+	// Close access to FIFOs
 	close(fd_in);
 	close(fd_out);
 
-	// remove FIFOs
+	// Delete FIFOs
 	unlink(in_fifo);
 	unlink(out_fifo);
 	
@@ -166,13 +142,8 @@ void *handle_ipc(void *args_ptr){
 }
 
 // launch parameters:
-// 0=executable name
-// 1=executable lib
-// 2=size of launch args
-// 3=client width
-// 4=client height
-// 5=cache folder
-// 6=user folder
+// 0=executable name  1=executable lib  2=size of launch args
+// 3=client width 4=client height  5=cache folder  6=user folder
 int main(int argc, char *argv[]){
 	if(argc != 7){
 		perror("Not enough arguments recieved.");
@@ -219,7 +190,7 @@ int main(int argc, char *argv[]){
 		perror(error);
 		exit(1);
 	}
-	// run method
+	// run RunMainBootstrap
 	int result = rmbs(params, atoi(argv[3]), atoi(argv[4]), 1, 0);
 	
 	// cleanup
