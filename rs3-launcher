@@ -1,0 +1,59 @@
+#!/bin/sh
+
+#CONFIGURATION
+BINARY_TYPE=4 # 3=Mac, 4=Linux
+LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portugues
+CACHE_FOLDER="/opt/nxtcache" # Where to save + load game cache
+USER_FOLDER="${HOME}/Jagex" # where to store preferences etc
+PREFERED_WORLD=26
+CLIENT_WIDTH=1024
+CLIENT_HEIGHT=768
+
+## Download config
+GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
+
+# Get number of files to download 
+NUM_FILES=$(echo "$GAME_CONFIG" | grep 'binary_count' | grep -oE '[^=]+$')
+BASE_DL_URL=$(echo "$GAME_CONFIG" | grep 'codebase' | cut -d= -f2,3)
+
+for i in $(seq 0 $((NUM_FILES - 1)) );
+do
+	FILE_NAME=$(echo "$GAME_CONFIG" | grep "download_name_$i" | grep -oE '[^=]+$')
+        DL_FILE_CRC=$(echo "$GAME_CONFIG" | grep "download_crc_$i" | grep -oE '[^=]+$')
+        if [ -f "${USER_FOLDER}/launcher/${FILE_NAME}"  ]; then
+                FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/${FILE_NAME}")
+                if  [ "$((0x${FILE_CRC}))" = "${DL_FILE_CRC}" ]; then
+                        continue # file exists and has not changed
+                fi
+        fi
+	
+        # file needs to be downloaded
+        DOWNLOAD_URL="${BASE_DL_URL}client?binaryType=${BINARY_TYPE}&fileName=${FILE_NAME}&crc=${DL_FILE_CRC}"
+	echo "Downloading ${FILE_NAME}..."
+	curl -s -o "${USER_FOLDER}/launcher/${FILE_NAME}.lzma" "$DOWNLOAD_URL" # download file
+	unlzma "${USER_FOLDER}/launcher/${FILE_NAME}.lzma" # decompress file
+	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/${FILE_NAME}")
+        if  [ "$((0x${FILE_CRC}))" != "${DL_FILE_CRC}" ]; then
+		echo "file ${FILE_NAME} was downloaded with mismatched checksums; exiting..."	
+		exit 1
+	fi
+done
+unset -v params
+params=$(
+	echo "$GAME_CONFIG" | grep 'param' | {
+		while read -r line ; do
+			KEY="$(echo "$line" | cut -f2 -d=)"
+			VALUE=""	
+			if [ "$( echo "$line" | cut -f3- -d=)" != "" ]; then
+       				VALUE="$(echo "$line" | cut -f3- -d=)"
+			fi
+			params="${params}\"${KEY}\" \"${VALUE}\" "
+		done
+		echo "$params"
+	}
+)
+
+LAUNCH_PARAMS=$(echo "${params}launcher " | tr '\n' ' ' )
+BINARY_LOCATION="${USER_FOLDER}/launcher/$(echo "$GAME_CONFIG" | grep "binary_name" | grep -oE '[^=]+$')"
+
+echo "${LAUNCH_PARAMS}" | ./launcher "${BINARY_LOCATION}" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
