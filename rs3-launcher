@@ -3,57 +3,69 @@
 #CONFIGURATION
 BINARY_TYPE=4 # 3=Mac, 4=Linux
 LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portugues
-CACHE_FOLDER="${HOME}/Jagex/RuneScape/" # Where to save + load game cache
+CACHE_FOLDER="${HOME}/Jagex/Runescape" # Where to save + load game cache
 USER_FOLDER="${HOME}/Jagex" # where to store preferences etc
 PREFERED_WORLD=26
 CLIENT_WIDTH=1024
 CLIENT_HEIGHT=768
 
-## Download config
-GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
-
-# Get number of files to download 
-NUM_FILES=$(echo "$GAME_CONFIG" | grep 'binary_count' | grep -oE '[^=]+$')
-BASE_DL_URL=$(echo "$GAME_CONFIG" | grep 'codebase' | cut -d= -f2,3)
-
-for i in $(seq 0 $((NUM_FILES - 1)) );
-do
-	FILE_NAME=$(echo "$GAME_CONFIG" | grep "download_name_$i" | grep -oE '[^=]+$')
-        DL_FILE_CRC=$(echo "$GAME_CONFIG" | grep "download_crc_$i" | grep -oE '[^=]+$')
-        if [ -f "${USER_FOLDER}/launcher/${FILE_NAME}"  ]; then
-                FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/${FILE_NAME}")
-                if  [ "$((0x${FILE_CRC}))" = "${DL_FILE_CRC}" ]; then
-                        continue # file exists and has not changed
-                fi
+# Downloads, decompresses and checksums the file. $1 is the crc of the downloading file
+dl_unlzma_and_crc () {
+	echo 'Downloading librs2client.so ..'
+	# download file
+        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so?&crc=${1}"
+	# decompress file
+        unlzma "${USER_FOLDER}/launcher/librs2client.so.lzma"
+        # compute crc32
+	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
+        # compare checksums
+	if  [ "$((0x${FILE_CRC}))" != "${1}" ]; then
+                echo "librs2client.so was downloaded with mismatched checksums; exiting..."   
+                exit 1
         fi
-	
-        # file needs to be downloaded
-        DOWNLOAD_URL="${BASE_DL_URL}client?binaryType=${BINARY_TYPE}&fileName=${FILE_NAME}&crc=${DL_FILE_CRC}"
-	echo "Downloading ${FILE_NAME}..."
-	curl -s -o "${USER_FOLDER}/launcher/${FILE_NAME}.lzma" "$DOWNLOAD_URL" # download file
-	unlzma "${USER_FOLDER}/launcher/${FILE_NAME}.lzma" # decompress file
-	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/${FILE_NAME}")
-        if  [ "$((0x${FILE_CRC}))" != "${DL_FILE_CRC}" ]; then
-		echo "file ${FILE_NAME} was downloaded with mismatched checksums; exiting..."	
-		exit 1
-	fi
-done
-unset -v params
+}
+
+# if the file to save the lib (e.g. never ran official client) doesn't exist, create it.
+if [ ! -d "${USER_FOLDER}/launcher/" ] ; then
+	mkdir -p "${USER_FOLDER}/launcher"
+fi
+
+# Download config
+GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
+# Find the latest crc32
+DL_FILE_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
+
+# check that file exists
+if [ -f "${USER_FOLDER}/launcher/librs2client.so" ] ; then
+	# compute crc32
+	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
+        # if the crc isn't correct e.g. outdated: delete and download.
+	# The downloaded crc is decimal, crc32 creates a hexadecimal value, which is converted to decimal 
+	if [ "$((0x${FILE_CRC}))" != "${DL_FILE_CRC}" ] ; then
+		rm "${USER_FOLDER}/launcher/librs2client.so"
+        	dl_unzlma_and_crc "${DL_FILE_CRC}"
+        fi
+else
+	# download librs2client.so if we don't have it
+	dl_unzlma_and_crc "${DL_FILE_CRC}"
+fi
+
+# each param appends '"key" "value" '; if value is null, "value" = ""	
 params=$(
-	echo "$GAME_CONFIG" | grep 'param' | {
+	echo "${GAME_CONFIG}" | grep 'param' | {
 		while read -r line ; do
-			KEY="$(echo "$line" | cut -f2 -d=)"
+			KEY="$(echo "${line}" | cut -f2 -d=)"
 			VALUE=""	
-			if [ "$( echo "$line" | cut -f3- -d=)" != "" ]; then
-       				VALUE="$(echo "$line" | cut -f3- -d=)"
+			if [ "$(echo "${line}" | cut -f3- -d=)" != "" ]; then
+       				VALUE="$(echo "${line}" | cut -f3- -d=)"
 			fi
 			params="${params}\"${KEY}\" \"${VALUE}\" "
 		done
-		echo "$params"
+		echo "${params}"
 	}
 )
 
 LAUNCH_PARAMS=$(echo "${params}launcher " | tr '\n' ' ' )
-BINARY_LOCATION="${USER_FOLDER}/launcher/$(echo "$GAME_CONFIG" | grep "binary_name" | grep -oE '[^=]+$')"
 
-echo "${LAUNCH_PARAMS}" | ./launcher "${BINARY_LOCATION}" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
+# Launch binary, passing params to it and piping the library's launch params via stdin
+echo "${LAUNCH_PARAMS}" | ./launcher "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
