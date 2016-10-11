@@ -48,8 +48,10 @@ else
 	dl_unlzma_and_crc "$DL_FILE_CRC"
 fi
 
+# Generate launch parameters; filter for 'param', then get key,value then add a '"' to start and end then finally append. 
 LAUNCH_PARAMS="$(echo "${GAME_CONFIG}" | grep 'param' | cut -f2- -d= | sed 's|=|" "|; s|.*|"&"|') launcher "
+# Replace all newlines with spaces .. this can't be one-linered for some reason :s
 LAUNCH_PARAMS=$(echo "${LAUNCH_PARAMS}" | tr '\n' ' ')
  
-# each param appends '"key" "value" '; if value is null, "value" = ""	
+# Launch binary, passing params to it and piping the library's launch params via stdin 	
 echo "${LAUNCH_PARAMS}" | "$(dirname $0)/launcher" "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
