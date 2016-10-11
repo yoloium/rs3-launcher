@@ -11,9 +11,8 @@ CLIENT_HEIGHT=768
 
 # Downloads, decompresses and checksums the file. $1 is the crc of the downloading file
 dl_unlzma_and_crc () {
-	echo 'Downloading librs2client.so ..'
 	# download file
-        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=${1}"
+        curl -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=${1}"
 	# decompress file
         unlzma "${USER_FOLDER}/launcher/librs2client.so.lzma"
         # compute crc32
@@ -25,18 +24,12 @@ dl_unlzma_and_crc () {
         fi
 }
 
-# if the file to save the lib (e.g. never ran official client) doesn't exist, create it.
-if [ ! -d "${USER_FOLDER}/launcher/" ] ; then
-	mkdir -p "${USER_FOLDER}/launcher"
-fi
-
-# if the cache folder (e.g. never ran official client) doesn't exist, create it.
-if [ ! -d "${CACHE_FOLDER}" ] ; then
-        mkdir -p "${CACHE_FOLDER}"
-fi
+# Make the nesessary folders if they don't exist already.
+mkdir -p "${USER_FOLDER}/launcher" "${CACHE_FOLDER}"
 
 # Download config
 GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
+
 # Find the latest crc32
 DL_FILE_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
 
@@ -55,22 +48,8 @@ else
 	dl_unlzma_and_crc "$DL_FILE_CRC"
 fi
 
+LAUNCH_PARAMS="$(echo "${GAME_CONFIG}" | grep 'param' | cut -f2- -d= | sed 's|=|" "|; s|.*|"&"|') launcher "
+LAUNCH_PARAMS=$(echo "${LAUNCH_PARAMS}" | tr '\n' ' ')
+ 
 # each param appends '"key" "value" '; if value is null, "value" = ""	
-params=$(
-	echo "${GAME_CONFIG}" | grep 'param' | {
-		while read -r line ; do
-			KEY="$(echo "${line}" | cut -f2 -d=)"
-			VALUE=""	
-			if [ "$(echo "${line}" | cut -f3- -d=)" != "" ]; then
-       				VALUE="$(echo "${line}" | cut -f3- -d=)"
-			fi
-			params="${params}\"${KEY}\" \"${VALUE}\" "
-		done
-		echo "${params}"
-	}
-)
-
-LAUNCH_PARAMS=$(echo "${params}launcher " | tr '\n' ' ' )
-
-# Launch binary, passing params to it and piping the library's launch params via stdin
 echo "${LAUNCH_PARAMS}" | "$(dirname $0)/launcher" "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
