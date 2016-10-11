@@ -12,27 +12,26 @@
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
 struct ipc_args {
-	char* pid;
-	char* cache_f;
-	char* user_f;
+	char *pid;
+	char *cache_f;
+	char *user_f;
 };
 
 void print_message(const char *prefix, const char *msg, int length){
-	printf("%smsg[id=%02x%02x, data=", prefix, msg[0], msg[1]);
+	printf("%smsg [ id=%02x%02x data=", prefix, msg[0], msg[1]);
 	int i = 2;
 	while (i < length){
 		unsigned char c = msg[i];
 		printf("%02x ", c);
 		++i;
 	}
-	printf(" len=%i]\n", length-2);
+	printf("] %i bytes\n", length-2);
 }
 
-int handle_messages(const char*msg, int length, int fd_out ,char* cache_folder, char* user_folder){
-	char msg_id[2];
-	strncpy(msg_id, msg, 2);
-	uint16_t id = le16toh(*(uint16_t*) msg_id);
-	print_message("REC: ", msg, length);
+int handle_message(const char *msg, int length, int fd_out, char *cache_folder, char *user_folder){
+	char msg_id[2] = {msg[0], msg[1]};
+	uint16_t id = be16toh(*(uint16_t *) msg_id);
+	print_message("GOT: ", msg, length);
 	switch(id){
 		case 0:
 			{
@@ -71,18 +70,18 @@ int handle_messages(const char*msg, int length, int fd_out ,char* cache_folder, 
 				// add these nessesary bytes
 				memcpy(dest, "\x00\x03\x00", 3);
 				dest += 3;
+
 				uint16_t enc_reply_size = htole16(reply_size);
 				// send reply size
 				write(fd_out, &enc_reply_size, 2);
+
 				// send reply
-				write(fd_out, reply, reply_size);			
+				write(fd_out, reply, reply_size);
+				print_message("SENT: ", reply, reply_size);			
 			}
 			break;
-		case 3072: // recieved closing message .. break and clean up
-			return 0;
 		default:		
 			break;
-		return 1;
 	}
 }
 
@@ -126,9 +125,7 @@ void *handle_ipc(void *args_ptr){
 		}
 
 		// handle message
-		if(!handle_messages(msg, msg_len, fd_out, args->cache_f, args->user_f)){
-			break;
-		}
+		handle_message(msg, msg_len, fd_out, args->cache_f, args->user_f);
 	}
 	// Close access to FIFOs
 	close(fd_in);
@@ -137,8 +134,6 @@ void *handle_ipc(void *args_ptr){
 	// Delete FIFOs
 	unlink(in_fifo);
 	unlink(out_fifo);
-	
-	return;
 }
 
 // launch parameters:
