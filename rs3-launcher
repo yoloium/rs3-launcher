@@ -13,13 +13,13 @@ CLIENT_HEIGHT=768
 dl_unlzma_and_crc () {
 	echo 'Downloading librs2client.so ..'
 	# download file
-        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=$1"
+        curl -s -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=${1}"
 	# decompress file
         unlzma "${USER_FOLDER}/launcher/librs2client.so.lzma"
         # compute crc32
 	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
         # compare checksums
-	if  [ "$((0x${FILE_CRC}))" != $1 ]; then
+	if  [ "$((0x${FILE_CRC}))" != "${1}" ]; then
                 echo "librs2client.so was downloaded with mismatched checksums; exiting..."   
                 exit 1
         fi
@@ -73,4 +73,4 @@ params=$(
 LAUNCH_PARAMS=$(echo "${params}launcher " | tr '\n' ' ' )
 
 # Launch binary, passing params to it and piping the library's launch params via stdin
-echo "${LAUNCH_PARAMS}" | ./launcher "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
+echo "${LAUNCH_PARAMS}" | "$(dirname $0)/launcher" "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
