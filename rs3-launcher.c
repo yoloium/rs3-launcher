@@ -25,7 +25,7 @@ void print_message(const char *prefix, const char *msg, int length){
 		printf("%02x ", c);
 		++i;
 	}
-	printf("] %i bytes\n", length-2);
+	printf("] %iB\n", length-2);
 }
 
 int handle_message(const char *msg, int length, int fd_out, char *cache_folder, char *user_folder){
@@ -51,7 +51,7 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 				dest += 2;
 
 				// add these 'nessesary' bytes to reply
-				memcpy(dest, "\x00\x002\x00\x00\x00\x000", 6);
+				memcpy(dest, "\x00\x02\x00\x00\x00\x00", 6);
 				dest += 6;
 
 				// would encode parent window id aka 00 00 00 00 so just move pointer
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	// load lib
-	void *lib = dlopen(argv[1],  RTLD_LAZY);
+	void *lib = dlopen(argv[1], RTLD_LAZY);
 	if(!lib){
 		perror("Error loading lib.");
 		exit(1);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[]){
 	pthread_t thread;
 	pthread_create(&thread, NULL, handle_ipc, &thread_args);
 	
-	// void RunMainBootstrap(const char* params, int width, int height, int ?, int ?);
+	// int RunMainBootstrap(const char* params, int width, int height, int ?, int ?);
 	int (*rmbs)(const char*, int, int, int, int);
 	
 	// Get address of method, check for errors

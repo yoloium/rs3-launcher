@@ -21,6 +21,13 @@ unlzma - xz-utils - used to decompress files
 gcc - gcc - compile the program
 ```
 
+To run on a fresh ubuntu install you should be able to run:
+```
+sudo apt install libarchive-zip-perl curl xz-utils gcc git lzma libsdl2-2.0-0
+```
+asnd then follow the instructions below.
+
+
 ### Installing
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
@@ -38,6 +45,20 @@ When the configuration looks good, now it's time to run the script.
 ```
 ./rs3-launcher
 ```
+
+## Fixing issues
+
+### Integrated graphics
+
+The game doesn't render the world; it's just sky blue. Fix: add this to the main scope of the script:
+```
+export MESA_GL_VERSION_OVERRIDE=3.0
+```
+
+### Problem decompressing the LZMA file.
+
+you probably don't have lzma installed. 
+
 ## Contributing
 
 Will consider accepting pull requests. But don't expect me to look here. PM me in game or something to let me know; RSN = yoloium
