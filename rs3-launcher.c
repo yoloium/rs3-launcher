@@ -9,6 +9,14 @@
 #include <stdint.h>
 #include <endian.h>
 
+//#define ENABLE_X11
+#ifdef ENABLE_X11
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <limits.h>
+#define WINDOW_TITLE "RuneScape"
+#endif
+
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
 struct ipc_args {
@@ -80,6 +88,28 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 				print_message("SENT: ", reply, reply_size);			
 			}
 			break;
+#ifdef ENABLE_X11
+		case 2:
+			{	// only continue if message is correct length	
+				if(length == 12){
+					// create buffer to extract window id
+					char wid[4];
+					// extract window id
+					memcpy(wid, msg+8, 4);
+					// convert raw window id to something usable
+					uint32_t window_id = be32toh(* (uint32_t *) wid);
+					// open display
+					Display *display = XOpenDisplay(NULL);
+					// only continue if successfully opened display
+					if(display){
+						// set then close display
+						XChangeProperty(display, (Window) window_id, XA_WM_NAME, XA_STRING, CHAR_BIT, PropModeReplace, (const unsigned char*) WINDOW_TITLE, strlen(WINDOW_TITLE));
+						XCloseDisplay(display);
+					}
+				} 
+			}
+			break;
+#endif
 		default:		
 			break;
 	}

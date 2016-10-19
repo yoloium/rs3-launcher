@@ -59,6 +59,9 @@ export MESA_GL_VERSION_OVERRIDE=3.0
 
 you probably don't have lzma installed. 
 
+### No window title
+uncomment ```define ENABLE_X11``` at the top of the C file. Then compile with the ```-lX11``` flag e.g. ```gcc -pthread rs3-launcher.c -o launcher -ldl -lX11```.
+
 ## Contributing
 
 Will consider accepting pull requests. But don't expect me to look here. PM me in game or something to let me know; RSN = yoloium
