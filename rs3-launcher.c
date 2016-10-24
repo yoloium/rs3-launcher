@@ -8,8 +8,9 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <endian.h>
+#include <unistd.h>
 
-//#define ENABLE_X11
+#define ENABLE_X11
 #ifdef ENABLE_X11
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
