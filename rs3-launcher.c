@@ -15,6 +15,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <limits.h>
+#include <time.h>
 #define WINDOW_TITLE "RuneScape"
 #endif
 
@@ -103,8 +104,12 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 					Display *display = XOpenDisplay(NULL);
 					// only continue if successfully opened display
 					if(display){
+						srand(time(NULL));
+						int r_int = rand();
+						char win_title[strlen(WINDOW_TITLE)+sizeof(r_int)+1];
+						sprintf(win_title, "%s %i", WINDOW_TITLE, r_int);
 						// set then close display
-						XChangeProperty(display, (Window) window_id, XA_WM_NAME, XA_STRING, CHAR_BIT, PropModeReplace, (const unsigned char*) WINDOW_TITLE, strlen(WINDOW_TITLE));
+						XChangeProperty(display, (Window) window_id, XA_WM_NAME, XA_STRING, CHAR_BIT, PropModeReplace, (const unsigned char*) win_title, strlen(win_title));
 						XCloseDisplay(display);
 					}
 				} 
