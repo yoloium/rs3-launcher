@@ -1,57 +1,44 @@
 #!/bin/sh
 
 #CONFIGURATION
-BINARY_TYPE=4 # 3=Mac, 4=Linux
-LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portugues
-CACHE_FOLDER="${HOME}/Jagex/RuneScape" # Where to save + load game cache
-USER_FOLDER="${HOME}/Jagex" # where to store preferences etc
-PREFERED_WORLD=26
-CLIENT_WIDTH=1024
-CLIENT_HEIGHT=768
-
-# Downloads, decompresses and checksums the file. $1 is the crc of the downloading file
-dl_unlzma_and_crc () {
-	# download file
-        curl -o "${USER_FOLDER}/launcher/librs2client.so.lzma" "http://world${PREFERED_WORLD}.runescape.com/k=5/client?binaryType=${BINARY_TYPE}&fileName=librs2client.so&crc=${1}"
-	# decompress file
-        unlzma "${USER_FOLDER}/launcher/librs2client.so.lzma"
-        # compute crc32
-	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
-        # compare checksums
-	if  [ "$((0x${FILE_CRC}))" != "${1}" ]; then
-                echo "librs2client.so was downloaded with mismatched checksums; exiting..."   
-                exit 1
-        fi
-}
+OS=4 # 3=Mac, 4=Linux
+LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portuguese
+CACHE_FOLDER="${HOME}/Jagex/RuneScape" # Where to store client cache
+USER_FOLDER="$HOME/Jagex" # where to store client settings
+WIDTH=1024
+HEIGHT=768
 
 # Make the nesessary folders if they don't exist already.
-mkdir -p "${USER_FOLDER}/launcher" "${CACHE_FOLDER}"
+mkdir -p "$USER_FOLDER" "$CACHE_FOLDER"
+
+cd $(dirname $0) || exit
 
 # Download config
-GAME_CONFIG=$(curl -s "http://world${PREFERED_WORLD}.runescape.com/k=5/jav_config.ws?binaryType=${BINARY_TYPE}")
+GAME_CONFIG=$(curl -s -L "http://runescape.com/k=5/jav_config.ws?binaryType=$OS") 
 
 # Find the latest crc32
-DL_FILE_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
+LATEST_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
 
-# check that file exists
-if [ -f "${USER_FOLDER}/launcher/librs2client.so" ] ; then
-	# compute crc32
-	FILE_CRC=$(crc32 "${USER_FOLDER}/launcher/librs2client.so")
-        # if the crc isn't correct e.g. outdated: delete and download.
-	# The downloaded crc is decimal, crc32 creates a hexadecimal value, which is converted to decimal 
-	if [ "$((0x${FILE_CRC}))" != "${DL_FILE_CRC}" ] ; then
-		rm "${USER_FOLDER}/launcher/librs2client.so"
-        	dl_unlzma_and_crc "${DL_FILE_CRC}"
+# Calculate hash of the current game file
+FILE_CRC=$(crc32 librs2client.so)
+
+# Check to see if we have the latest version
+if [ "$((0x$FILE_CRC))" != "$LATEST_CRC" ] ; then
+	# Download file
+        curl -L -o 'librs2client.so.lzma' "http://world16.runescape.com/k=5/client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST_CRC"
+	# Decompress file
+        7z e librs2client.so.lzma -y
+	# Check hash of newly downloaded client
+	FILE_CRC=$(crc32 librs2client.so)
+	if  [ "$((0x$FILE_CRC))" != "$LATEST_CRC" ]; then
+                echo 'librs2client.so was downloaded and extracted incorrectly; exiting...'   
+                exit 1
         fi
-else
-	# download librs2client.so if we don't have it
-	dl_unlzma_and_crc "$DL_FILE_CRC"
 fi
 
-# Generate launch parameters; filter for 'param', then get key,value then add a '"' to start and end then finally append. 
-LAUNCH_PARAMS="$(echo "${GAME_CONFIG}" | grep 'param' | cut -f2- -d= | sed 's|=|" "|; s|.*|"&"|') launcher "
-# Replace all newlines with spaces .. this can't be one-linered for some reason :s
-LAUNCH_PARAMS=$(echo "${LAUNCH_PARAMS}" | tr '\n' ' ')
- 
+# Generate launch parameters; filter for 'param', print: "$2" "$3" using AWK. Then replace all newlines with spaces.
+LAUNCH_PARAMS=$(echo "$GAME_CONFIG" | grep 'param' | awk -P -F'=' -v x="\"" '{print x$2x, x$3x}')
+LAUNCH_PARAMS=$(echo "$LAUNCH_PARAMS launcher " | tr '\n' ' ')
+
 # Launch binary, passing params to it and piping the library's launch params via stdin 	
-echo "${LAUNCH_PARAMS}" | "$(dirname $0)/launcher" "${USER_FOLDER}/launcher/librs2client.so" "${#LAUNCH_PARAMS}" "${CLIENT_WIDTH}" "${CLIENT_HEIGHT}" "${CACHE_FOLDER}" "${USER_FOLDER}"
+echo "$LAUNCH_PARAMS" | './launcher' './librs2client.so' "${#LAUNCH_PARAMS}" "$WIDTH" "$HEIGHT" "$CACHE_FOLDER" "$USER_FOLDER"
