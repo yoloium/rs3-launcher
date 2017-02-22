@@ -2,7 +2,7 @@
 
 This project is a minimalistic launcher for Runescsape 3 (NXT).
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
-This project has only been tested on Debian GNU/Linux. 
+This project has been tested on Debian and Void GNU/Linux.
 
 ## Getting Started
 
