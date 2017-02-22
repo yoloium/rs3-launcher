@@ -17,7 +17,7 @@ The shell script requies the following programs
 ```
 crc32 - libarchive-zip-perl - used to verify that files were downloaded correctly
 curl - curl - used to download files
-unlzma - xz-utils - used to decompress files
+7zip - p7zip - used to compress/decompress files
 gcc - gcc - compile the program
 ```
 
@@ -54,10 +54,6 @@ The game doesn't render the world; it's just sky blue. Fix: add this to the main
 ```
 export MESA_GL_VERSION_OVERRIDE=3.0
 ```
-
-### Problem decompressing the LZMA file.
-
-you probably don't have lzma installed. 
 
 ### No window title
 uncomment ```define ENABLE_X11``` at the top of the C file. Then compile with the ```-lX11``` flag e.g. ```gcc -pthread rs3-launcher.c -o launcher -ldl -lX11```.
