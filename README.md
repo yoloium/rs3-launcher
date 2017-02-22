@@ -23,7 +23,7 @@ gcc - gcc - compile the program
 
 To run on a fresh ubuntu install you should be able to run:
 ```
-sudo apt install libarchive-zip-perl curl xz-utils gcc git lzma libsdl2-2.0-0
+sudo apt install libarchive-zip-perl curl p7zip-full gcc git libsdl2-2.0-0
 ```
 and then follow the instructions below.
 
