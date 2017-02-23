@@ -23,7 +23,7 @@ LATEST_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
 FILE_CRC=$(crc32 librs2client.so)
 
 # Check to see if we have the latest version
-if [ "$((0x$FILE_CRC))" != "$LATEST_CRC" ] ; then
+if [ ! -f 'librs2client.so' ] || [ "$((0x$FILE_CRC))" != "$LATEST_CRC"] ; then
 	# Download file
         curl -L -o 'librs2client.so.lzma' "http://world16.runescape.com/k=5/client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST_CRC"
 	# Decompress file
