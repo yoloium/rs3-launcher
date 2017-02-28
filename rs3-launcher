@@ -17,28 +17,27 @@ cd $(dirname $0) || exit
 GAME_CONFIG=$(curl -s -L "http://runescape.com/k=5/jav_config.ws?binaryType=$OS") 
 
 # Find the latest crc32
-LATEST_CRC=$(echo "$GAME_CONFIG" | grep 'download_crc_0' | grep -oE '[^=]+$')
-
+LATEST=$(echo "$GAME_CONFIG" | sed -n 's/^download_crc_0=//p')
 # Calculate hash of the current game file
-FILE_CRC=$(crc32 librs2client.so)
+CURRENT=$(crc32 librs2client.so)
 
 # Check to see if we have the latest version
-if [ ! -f 'librs2client.so' ] || [ "$((0x$FILE_CRC))" != "$LATEST_CRC" ] ; then
+if [ ! -f 'librs2client.so' ] || [ "$((0x$CURRENT))" != "$LATEST" ] ; then
 	# Download file
-        curl -L -o 'librs2client.so.lzma' "http://world16.runescape.com/k=5/client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST_CRC"
+	CODEBASE=$(echo "$GAME_CONFIG" | sed -n 's/^codebase=//p')
+        curl -L -o 'librs2client.so.lzma' "${CODEBASE}client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST"
 	# Decompress file
         7z e librs2client.so.lzma -y
 	# Check hash of newly downloaded client
-	FILE_CRC=$(crc32 librs2client.so)
-	if  [ "$((0x$FILE_CRC))" != "$LATEST_CRC" ]; then
-                echo 'librs2client.so was downloaded and extracted incorrectly; exiting...'   
-                exit 1
+	CURRENT=$(crc32 librs2client.so)
+	if  [ "$((0x$CURRENT))" != "$LATEST" ]; then
+                echo 'librs2client.so was downloaded and extracted incorrectly; exiting...' && exit 1
         fi
 fi
 
 # Generate launch parameters; filter for 'param', print: "$2" "$3" using AWK. Then replace all newlines with spaces.
-LAUNCH_PARAMS=$(echo "$GAME_CONFIG" | grep 'param' | awk -P -F'=' -v x="\"" '{print x$2x, x$3x}')
-LAUNCH_PARAMS=$(echo "$LAUNCH_PARAMS launcher " | tr '\n' ' ')
+PARAMS=$(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}')
+PARAMS=$(echo "$PARAMS launcher " | tr '\n' ' ')
 
 # Launch binary, passing params to it and piping the library's launch params via stdin 	
-echo "$LAUNCH_PARAMS" | './launcher' './librs2client.so' "${#LAUNCH_PARAMS}" "$WIDTH" "$HEIGHT" "$CACHE_FOLDER" "$USER_FOLDER"
+echo "$PARAMS" | './launcher' './librs2client.so' "${#PARAMS}" "$WIDTH" "$HEIGHT" "$CACHE_FOLDER" "$USER_FOLDER"

@@ -32,7 +32,7 @@ and then follow the instructions below.
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
 cd rs3-launcher
-gcc -pthread rs3-launcher.c -o launcher -ldl
+gcc -pthread launcher.c -o launcher -ldl -lX11
 ```
 DO NOT RUN THE CLIENT YET
 Open rs3-launcher in your favourite text editor e.g.
@@ -55,16 +55,13 @@ The game doesn't render the world; it's just sky blue. Fix: add this to the main
 export MESA_GL_VERSION_OVERRIDE=3.0
 ```
 
-### No window title
-uncomment ```define ENABLE_X11``` at the top of the C file. Then compile with the ```-lX11``` flag e.g. ```gcc -pthread rs3-launcher.c -o launcher -ldl -lX11```.
-
 ## Contributing
 
 Will consider accepting pull requests. But don't expect me to look here. PM me in game or something to let me know; RSN = yoloium
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
