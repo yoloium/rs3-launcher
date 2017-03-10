@@ -3,8 +3,6 @@
 This project is a minimalistic launcher for Runescsape 3 (NXT).
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
 This project has been tested on Debian and Void GNU/Linux.
-For a version of this written in python, check my gist: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a.
-For a simple (legacy) java client launcher, check my gist: https://gist.github.com/yoloium/0dd28b23da8cf1d9c409972141137967. NOTE: read comment for RS3 usage.
 
 ### Prerequisities
 
@@ -60,6 +58,11 @@ NOTE if you have an older graphics card, you can replace '3.0' with '2.1' so tha
 ## Contributing
 
 Will consider accepting pull requests. But don't expect me to look here. PM me in game or something to let me know; RSN = yoloium
+
+## Alternatives
+1. Python + shell equivalent: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a.
+2. Minimal (legacy) java client launcher: https://gist.github.com/yoloium/0dd28b23da8cf1d9c409972141137967. NOTE: read comment for RS3 usage.
+3. (bloated) C++ equivalent: https://github.com/syldrathecat/nxtlauncher
 
 ## License
 
