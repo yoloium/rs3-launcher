@@ -1,6 +1,6 @@
 # Runescape 3 NXT launcher (linux)
 
-This project is a minimalistic launcher for Runescsape 3 (NXT).
+This project is a minimalistic launcher for Runescape 3 (NXT).
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
 This project has been tested on Debian and Void GNU/Linux.
 
