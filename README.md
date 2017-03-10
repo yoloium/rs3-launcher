@@ -5,13 +5,7 @@ It uses a (portable, /bin/sh) shell script to download the game config, update f
 This project has been tested on Debian and Void GNU/Linux.
 For a version of this written in python, check my gist: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a.
 For a simple (legacy) java client launcher, check my gist: https://gist.github.com/yoloium/0dd28b23da8cf1d9c409972141137967. NOTE: read comment for RS3 usage.
-## Getting Started
 
-You need to make sure that you have all the libraries installed to load $HOME/Jagex/launcher/librs2client.so.
-You can check this by executing
-```
-ldd ~/Jagex/launcher/librs2client.so | grep 'not found'
-```
 ### Prerequisities
 
 The shell script requies the following programs
@@ -43,7 +37,12 @@ vim rs3-launcher
 ```
 and edit the configuration at the top of this script. If you have a non-standard cache location, you will need to change this file to reflect on where the cache is kept. 
 
-When the configuration looks good, now it's time to run the script.
+When the configuration looks good, now it's time to make sure that you have all the libraries installed to load librs2client.so.
+You can check this by executing
+```
+ldd librs2client.so | grep 'not found'
+```
+When all dependencies are met, you can run the script;
 ```
 ./rs3-launcher
 ```
