@@ -3,7 +3,8 @@
 This project is a minimalistic launcher for Runescsape 3 (NXT).
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
 This project has been tested on Debian and Void GNU/Linux.
-
+For a version of this written in python, check my gist: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a.
+For a simple (legacy) java client launcher, check my gist: https://gist.github.com/yoloium/0dd28b23da8cf1d9c409972141137967. NOTE: read comment for RS3 usage.
 ## Getting Started
 
 You need to make sure that you have all the libraries installed to load $HOME/Jagex/launcher/librs2client.so.
@@ -15,15 +16,16 @@ ldd ~/Jagex/launcher/librs2client.so | grep 'not found'
 
 The shell script requies the following programs
 ```
-crc32 - libarchive-zip-perl - used to verify that files were downloaded correctly
+rhash - rhash - used to verify that files were downloaded correctly
 curl - curl - used to download files
 7zip - p7zip - used to compress/decompress files
 gcc - gcc - compile the program
+xcb, xcb-util - changing window title
 ```
 
 To run on a fresh ubuntu install you should be able to run:
 ```
-sudo apt install libarchive-zip-perl curl p7zip-full gcc git libsdl2-2.0-0
+sudo apt install rhash curl p7zip-full gcc git libsdl2-2.0-0 libx11-xcb-dev libx11-xcb-util-dev
 ```
 and then follow the instructions below.
 
@@ -32,7 +34,7 @@ and then follow the instructions below.
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
 cd rs3-launcher
-gcc -pthread launcher.c -o launcher -ldl -lX11
+gcc launcher.c -o launcher -ldl -lxcb -lpthread
 ```
 DO NOT RUN THE CLIENT YET
 Open rs3-launcher in your favourite text editor e.g.
@@ -54,6 +56,7 @@ The game doesn't render the world; it's just sky blue. Fix: add this to the main
 ```
 export MESA_GL_VERSION_OVERRIDE=3.0
 ```
+NOTE if you have an older graphics card, you can replace '3.0' with '2.1' so that you can play on a system which does not support opengl 3.0
 
 ## Contributing
 

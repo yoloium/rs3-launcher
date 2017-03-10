@@ -5,8 +5,6 @@ OS=4 # 3=Mac, 4=Linux
 LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portuguese
 CACHE_FOLDER="${HOME}/Jagex/RuneScape" # Where to store client cache
 USER_FOLDER="$HOME/Jagex" # where to store client settings
-WIDTH=1024
-HEIGHT=768
 
 # Make the nesessary folders if they don't exist already.
 mkdir -p "$USER_FOLDER" "$CACHE_FOLDER"
@@ -18,18 +16,24 @@ GAME_CONFIG=$(curl -s -L "http://runescape.com/k=5/jav_config.ws?binaryType=$OS"
 
 # Find the latest crc32
 LATEST=$(echo "$GAME_CONFIG" | sed -n 's/^download_crc_0=//p')
+
+# If we dont have the file, make an empty one so it can be hashed
+if [ ! -f 'librs2client.so' ] ; then
+        touch librs2client.so
+fi
+
 # Calculate hash of the current game file
-CURRENT=$(crc32 librs2client.so)
+CURRENT=$(rhash --crc32 --printf=%c librs2client.so)
 
 # Check to see if we have the latest version
-if [ ! -f 'librs2client.so' ] || [ "$((0x$CURRENT))" != "$LATEST" ] ; then
+if [ "$((0x$CURRENT))" != "$LATEST" ] ; then
 	# Download file
 	CODEBASE=$(echo "$GAME_CONFIG" | sed -n 's/^codebase=//p')
         curl -L -o 'librs2client.so.lzma' "${CODEBASE}client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST"
 	# Decompress file
         7z e librs2client.so.lzma -y
 	# Check hash of newly downloaded client
-	CURRENT=$(crc32 librs2client.so)
+	CURRENT=$(rhash --crc32 --printf=%c librs2client.so)
 	if  [ "$((0x$CURRENT))" != "$LATEST" ]; then
                 echo 'librs2client.so was downloaded and extracted incorrectly; exiting...' && exit 1
         fi
@@ -40,4 +44,4 @@ PARAMS=$(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$
 PARAMS=$(echo "$PARAMS launcher " | tr '\n' ' ')
 
 # Launch binary, passing params to it and piping the library's launch params via stdin 	
-echo "$PARAMS" | './launcher' './librs2client.so' "${#PARAMS}" "$WIDTH" "$HEIGHT" "$CACHE_FOLDER" "$USER_FOLDER"
+echo "$PARAMS"| ./launcher "${#PARAMS}" "$CACHE_FOLDER" "$USER_FOLDER"

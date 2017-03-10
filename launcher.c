@@ -9,16 +9,12 @@
 #include <stdint.h>
 #include <endian.h>
 #include <unistd.h>
-
-#define ENABLE_X11
-#ifdef ENABLE_X11
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_atom.h>
 #include <limits.h>
 #include <time.h>
-#define WINDOW_TITLE "RuneScape"
-#endif
 
+#define WINDOW_TITLE "RuneScape"
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
 struct ipc_args {
@@ -90,7 +86,6 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 				print_message("SENT: ", reply, reply_size);			
 			}
 			break;
-#ifdef ENABLE_X11
 		case 2:
 			{	// only continue if message is correct length	
 				if(length == 12){
@@ -100,22 +95,29 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 					memcpy(wid, msg+8, 4);
 					// convert raw window id to something usable
 					uint32_t window_id = be32toh(* (uint32_t *) wid);
-					// open display
-					Display *display = XOpenDisplay(NULL);
-					// only continue if successfully opened display
-					if(display){
+					// connect to display
+					xcb_connection_t *connection = xcb_connect(NULL, NULL);
+					// only continue if successfully connected
+					if(connection){
 						srand(time(NULL));
 						int r_int = rand();
 						char win_title[strlen(WINDOW_TITLE)+sizeof(r_int)+1];
 						sprintf(win_title, "%s %i", WINDOW_TITLE, r_int);
-						// set then close display
-						XChangeProperty(display, (Window) window_id, XA_WM_NAME, XA_STRING, CHAR_BIT, PropModeReplace, (const unsigned char*) win_title, strlen(win_title));
-						XCloseDisplay(display);
+						// set the window title
+						xcb_change_property(connection, 
+							XCB_PROP_MODE_REPLACE, 
+							(xcb_window_t) window_id, 
+							XCB_ATOM_WM_NAME, 
+							XCB_ATOM_STRING, 
+							8, strlen(win_title),
+							(const unsigned char*) win_title
+						);
+						xcb_flush(connection);
+						xcb_disconnect(connection);
 					}
 				} 
 			}
 			break;
-#endif
 		default:		
 			break;
 	}
@@ -173,15 +175,15 @@ void *handle_ipc(void *args_ptr){
 }
 
 // launch parameters:
-// 0=executable name  1=executable lib  2=size of launch args
-// 3=client width 4=client height  5=cache folder  6=user folder
+// 0=executable name 1=size of launch args
+// 2=cache folder  3=user folder
 int main(int argc, char *argv[]){
-	if(argc != 7){
+	if(argc != 4){
 		perror("Not enough arguments recieved.");
 		exit(1);
 	}
 	// get parameters from pipe (stdin)
-	char buf[atoi(argv[2])];
+	char buf[atoi(argv[1])];
 	fgets(buf, sizeof buf, stdin);
 	int i = strlen(buf) - 1;
 	if(buf[i] == '\n'){
@@ -189,7 +191,7 @@ int main(int argc, char *argv[]){
 	}
 	
 	// load lib
-	void *lib = dlopen(argv[1], RTLD_LAZY);
+	void *lib = dlopen("./librs2client.so", RTLD_NOW);
 	if(!lib){
 		perror("Error loading lib.");
 		exit(1);
@@ -204,8 +206,8 @@ int main(int argc, char *argv[]){
 	// create thread params
 	struct ipc_args thread_args;
 	thread_args.pid=pid;
-	thread_args.cache_f=argv[5];
-	thread_args.user_f=argv[6];
+	thread_args.cache_f=argv[2];
+	thread_args.user_f=argv[3];
 
 	// create and run IPC thread.
 	pthread_t thread;
@@ -222,7 +224,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	// run RunMainBootstrap
-	int result = rmbs(params, atoi(argv[3]), atoi(argv[4]), 1, 0);
+	int result = rmbs(params, 1024, 768, 1, 0);
 	
 	// cleanup
 	pthread_join(thread, NULL);
