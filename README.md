@@ -35,14 +35,13 @@ vim rs3-launcher
 ```
 and edit the configuration at the top of this script. If you have a non-standard cache location, you will need to change this file to reflect on where the cache is kept. 
 
-When the configuration looks good, now it's time to make sure that you have all the libraries installed to load librs2client.so.
-You can check this by executing
-```
-ldd librs2client.so | grep 'not found'
-```
-When all dependencies are met, you can run the script;
+When the configuration looks good, ou can run the script;
 ```
 ./rs3-launcher
+```
+If the game window doesn't open, make sure that all dependencies are met with the newly downloaded client with:
+```
+ldd librs2client.so | grep 'not found'
 ```
 
 ## Fixing issues
