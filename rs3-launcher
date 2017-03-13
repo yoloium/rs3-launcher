@@ -22,7 +22,7 @@ CURRENT=$(rhash --crc32 --printf=%c librs2client.so)
 if [ "$((0x$CURRENT))" != "$LATEST" ] ; then
 	# Download file
 	CODEBASE=$(echo "$GAME_CONFIG" | sed -n 's/^codebase=//p')
-        curl -L -o 'librs2client.so.lzma' "${CODEBASE}client?binaryType=$OS&fileName=librs2client.so&crc=$LATEST"
+        curl -L -o 'librs2client.so.lzma' "${CODEBASE}client?binaryType=4&fileName=librs2client.so&crc=$LATEST"
 	# Decompress file
         7z e librs2client.so.lzma -y
 	# Check hash of newly downloaded client
