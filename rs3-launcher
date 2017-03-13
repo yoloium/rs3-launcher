@@ -1,9 +1,6 @@
 #!/bin/sh
 
-#CONFIGURATION
-OS=4 # 3=Mac, 4=Linux
-LANGUAGE=0 # 0=English, 1=German, 2=French, 3=Brazilian Portuguese
-CACHE_FOLDER="${HOME}/Jagex/RuneScape" # Where to store client cache
+CACHE_FOLDER="$HOME/Jagex/RuneScape" # Where to store client cache
 USER_FOLDER="$HOME/Jagex" # where to store client settings
 
 # Make the nesessary folders / game client if they don't exist already.
@@ -13,7 +10,7 @@ touch librs2client.so
 cd $(dirname $0) || exit
 
 # Download config
-GAME_CONFIG=$(curl -s -L "http://runescape.com/k=5/jav_config.ws?binaryType=$OS") 
+GAME_CONFIG=$(curl -s -L 'http://runescape.com/k=5/jav_config.ws?binaryType=4') 
 
 # Find the latest crc32
 LATEST=$(echo "$GAME_CONFIG" | sed -n 's/^download_crc_0=//p')
