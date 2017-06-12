@@ -62,14 +62,19 @@ int handle_message(const char *msg, int length, int fd_out, char *cache_folder, 
 	}
 }
 
-void *handle_ipc(void *args_ptr){
-	ipc_args *args = args_ptr;
+/*
+	launch parameters:
+	0=executable name 
+	1=cache folder  2=user folder
+	3=pid
+*/ 
+int main(int argc, char *argv[]){
 	
 	// Size and assemble FIFO locations
-	char in_fifo[sizeof(FIFO_PREFIX) + sizeof(args->pid) + sizeof("_i")];
-	char out_fifo[sizeof(FIFO_PREFIX) + sizeof(args->pid) + sizeof("_o")];
-	snprintf(in_fifo, sizeof in_fifo, "%s%s%s", FIFO_PREFIX, args->pid, "_i");
-	snprintf(out_fifo, sizeof out_fifo, "%s%s%s", FIFO_PREFIX, args->pid, "_o");
+	char in_fifo[sizeof(FIFO_PREFIX) + sizeof(argv[3]) + sizeof("_i")];
+	char out_fifo[sizeof(FIFO_PREFIX) + sizeof(argv[3]) + sizeof("_o")];
+	snprintf(in_fifo, sizeof in_fifo, "%s%s%s", FIFO_PREFIX, argv[3], "_i");
+	snprintf(out_fifo, sizeof out_fifo, "%s%s%s", FIFO_PREFIX, argv[3], "_o");
 	
 	// Make FIFOs
 	mkfifo(in_fifo, 0600);
@@ -99,7 +104,7 @@ void *handle_ipc(void *args_ptr){
 		}
 
 		// handle message
-		handle_message(msg, msg_len, fd_out, args->cache_f, args->user_f);
+		handle_message(msg, msg_len, fd_out, argv[1], argv[2]);
 	}
 	printf("Ended communication with client.\n");
 
@@ -110,31 +115,4 @@ void *handle_ipc(void *args_ptr){
 	// Delete FIFOs
 	unlink(in_fifo);
 	unlink(out_fifo);
-}
-/*
-	launch parameters:
-	0=executable name 
-	1=cache folder  2=user folder
-	3=args n-1=pid
-*/ 
-int main(int argc, char *argv[]){
-	extern char** environ;
-
-	// create thread params
-	ipc_args thread_args = { argv[argc-1], argv[1], argv[2] };
-
-	// create and run IPC thread.
-	pthread_t thread;
-	pthread_create(&thread, NULL, handle_ipc, &thread_args);
-	
-	int result;
-	pid_t pid = fork();
-	if(pid > 0){
-		waitpid(pid, &result, 0);
-	} else {
-		execve(argv[3], argv+3, environ);
-	}
-
-	pthread_join(thread, NULL);
-	return result;
 }

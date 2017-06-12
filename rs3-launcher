@@ -34,8 +34,9 @@ if [ "$((0x$CURRENT))" != "$LATEST" ] ; then
         fi
 fi
 
-PARAMS="$client $(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}') launcher $PID"
-echo $PARAMS
+PARAMS="$(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}') launcher $PID"
 
 # Launch launcher
-echo "$PARAMS" | xargs $(dirname $0)/launcher "$CACHE_FOLDER" "$USER_FOLDER"
+$(dirname $0)/launcher "$CACHE_FOLDER" "$USER_FOLDER" "$PID" &
+
+echo "$PARAMS" | xargs $client
