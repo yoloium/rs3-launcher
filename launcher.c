@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
 			memset(reply, 0, reply_size);
 			memcpy(reply, &msg_size, 2);		
 			memcpy(reply+2, &msg_id, 2);
-			memcpy(reply+4, bytes1, 8);
+			memcpy(reply+4, bytes1, 10);
 			memcpy(reply+14, argv[1], clen);
 			memcpy(reply+15+clen, argv[2], ulen);
 			memcpy(reply+16+clen+ulen, bytes2, 5);
