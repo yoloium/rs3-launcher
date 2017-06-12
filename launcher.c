@@ -73,7 +73,6 @@ int main(int argc, char *argv[]){
 	
 			// declare variables to write in reply
 			uint16_t msg_id = htobe16(0x0001);
-			uint16_t msg_size = htole16(reply_size);
 			uint16_t min_w = htobe16(765), min_h = htobe16(540);
 			uint16_t max_w = htobe16(3840), max_h = htobe16(2160);
 			uint16_t width = htobe16(1024), height = htobe16(768); 
