@@ -19,40 +19,6 @@ void print_message(const char *prefix, const char *msg, int length){
 	printf("] %iB\n", length-2);
 }
 
-int handle_message(const char *msg, int length, int fd_out, char *cache_folder, char *user_folder){
-	char msg_id[2] = {msg[0], msg[1]};
-	uint16_t id = be16toh(*(uint16_t *) msg_id);
-	print_message("GOT: ", msg, length);
-	if(id == 0) {
-		// calculate reply size to make buffer
-		uint16_t reply_size = htole16(17 + strlen(cache_folder) + strlen(user_folder));
-		char reply[reply_size];
-		
-		// declare variables to write in reply
-		uint16_t msg_id = htobe16(1);
-		char *bytes1 = "\x00\x02\x00\x00\x00\x00";
-		char *bytes2 = "\x00\x03\x00";
-		
-		// zero and fill reply. 
-                memset(reply, 0, reply_size); 
-		memcpy(reply, &msg_id, 2);
-		memcpy(reply+2, bytes1, 6);
-		int clen = strlen(cache_folder), ulen = strlen(user_folder);
-		memcpy(reply+12, cache_folder, clen);
-		memcpy(reply+13+clen, user_folder, ulen);
-		memcpy(reply+14+clen+ulen, bytes2, 3);
-
-		// send reply size
-		write(fd_out, &reply_size, 2);
-		// send reply
-		write(fd_out, reply, reply_size);
-		print_message("SENT: ", reply, reply_size);			
-
-	} else if (id == 0x0020){
-		write(fd_out, "\4\0\0\v\0\1" ,6);
-	}
-}
-
 /*
 	launch parameters:
 	0=executable name 
@@ -95,7 +61,37 @@ int main(int argc, char *argv[]){
 		}
 
 		// handle message
-		handle_message(msg, msg_len, fd_out, argv[1], argv[2]);
+		char msg_id[2] = {msg[0], msg[1]};
+		uint16_t id = be16toh(*(uint16_t *) msg_id);
+		print_message("GOT: ", msg, msg_len);
+		if(id == 0) {
+			// calculate reply size to make buffer
+			int clen = strlen(argv[1]), ulen = strlen(argv[2]);
+			uint16_t reply_size = htole16(17 + clen + ulen);
+			char reply[reply_size];
+			
+			// declare variables to write in reply
+			uint16_t msg_id = htobe16(1);
+			char *bytes1 = "\x00\x02\x00\x00\x00\x00";
+			char *bytes2 = "\x00\x03\x00";
+			
+			// zero and fill reply. 
+               		 memset(reply, 0, reply_size); 
+			memcpy(reply, &msg_id, 2);
+			memcpy(reply+2, bytes1, 6);
+			memcpy(reply+12, argv[1], clen);
+			memcpy(reply+13+clen, argv[2], ulen);
+			memcpy(reply+14+clen+ulen, bytes2, 3);
+	
+			// send reply size
+			write(fd_out, &reply_size, 2);
+			// send reply
+			write(fd_out, reply, reply_size);
+			print_message("SENT: ", reply, reply_size);			
+
+		} else if (id == 0x0020){
+			write(fd_out, "\4\0\0\v\0\1" ,6);
+		}
 	}
 	printf("Ended communication with client.\n");
 
