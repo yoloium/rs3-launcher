@@ -14,12 +14,6 @@
 
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
-typedef struct {
-	char *pid;
-	char *cache_f;
-	char *user_f;
-} ipc_args;
-
 void print_message(const char *prefix, const char *msg, int length){
 	printf("%smsg [ id=%02x%02x data=", prefix, msg[0], msg[1]);
 	for (int i = 2; i < length; ++i){
