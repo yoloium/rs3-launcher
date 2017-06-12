@@ -25,19 +25,18 @@ and then follow the instructions below.
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
 cd rs3-launcher
-gcc launcher.c -o launcher
 ```
-DO NOT RUN THE CLIENT YET
-Open rs3-launcher in your favourite text editor e.g.
-```
-vim rs3-launcher
-```
-and edit the configuration at the top of this script. If you have a non-standard cache location, you will need to change this file to reflect on where the cache is kept. 
-
-When the configuration looks good, ou can run the script;
+Now modify launcher.c and rs3-launcher in your favourite text editor e.g.
+```vim launcher.c```
+And change any of the window numbers from lines 75 to 82.
+In the script you can edit the top lines of code to point to where you have your game cache and user information located. By default they use the official client's defaults.
+Now compile the c file
+```gcc launcher.c -o launcher```
+When the configuration looks good, you can run the script;
 ```
 ./rs3-launcher
 ```
+
 If the game window doesn't open, make sure that all dependencies are met with the newly downloaded client with:
 ```
 ldd librs2client.so | grep 'not found'
