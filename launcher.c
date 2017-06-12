@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <endian.h>
 #include <unistd.h>
 #include <limits.h>
-#include <pthread.h>
 
 #define FIFO_PREFIX "/tmp/RS2LauncherConnection_"
 
