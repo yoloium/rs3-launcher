@@ -68,12 +68,12 @@ int main(int argc, char *argv[]){
 		if(id == 0) {
 			int clen = strlen(argv[1]), ulen = strlen(argv[2]), tlen = strlen(TITLE);
 			// calculate reply size to make buffer
-			uint16_t reply_size = htole16(clen + ulen + tlen + 54);
+			uint16_t reply_size = htole16(clen + ulen + tlen + 52);
 			char reply[reply_size];
 	
 			// declare variables to write in reply
 			uint16_t msg_id = htobe16(0x0001);
-			uint16_t msg_size = htole16(reply_size - 2);
+			uint16_t msg_size = htole16(reply_size);
 			uint16_t min_w = htobe16(765), min_h = htobe16(540);
 			uint16_t max_w = htobe16(3840), max_h = htobe16(2160);
 			uint16_t width = htobe16(1024), height = htobe16(768); 
@@ -83,29 +83,28 @@ int main(int argc, char *argv[]){
 	
 			char *bytes1 = "\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00";
 			char *bytes2 = "\x00\x04\x00\x00\x07";
-			char *bytes3 = "\x12\x00";
 			// zero and fill reply. 
 			memset(reply, 0, reply_size);
-			memcpy(reply, &msg_size, 2);		
-			memcpy(reply+2, &msg_id, 2);
-			memcpy(reply+4, bytes1, 10);
-			memcpy(reply+14, argv[1], clen);
-			memcpy(reply+15+clen, argv[2], ulen);
-			memcpy(reply+16+clen+ulen, bytes2, 5);
-			memcpy(reply+21+clen+ulen, (const char*) TITLE, tlen);
-			memcpy(reply+22+clen+ulen+tlen, &min_w, 2);
-			memcpy(reply+24+clen+ulen+tlen, &min_h, 2);
-			memcpy(reply+26+clen+ulen+tlen, &max_w, 2);
-			memcpy(reply+28+clen+ulen+tlen, &max_h, 2);
-			memcpy(reply+30+clen+ulen+tlen, &width, 2);
-			memcpy(reply+32+clen+ulen+tlen, &height, 2);
-			memcpy(reply+34+clen+ulen+tlen, &max, 2);
-			memcpy(reply+38+clen+ulen+tlen, &maximised_w_offset, 2);
-			memcpy(reply+42+clen+ulen+tlen, &maximised_h_offset, 2);
-			memcpy(reply+46+clen+ulen+tlen, &maximised_w, 2);
-			memcpy(reply+50+clen+ulen+tlen, &maximised_h, 2);
+			memcpy(reply, &msg_id, 2);
+			memcpy(reply+2, bytes1, 10);
+			memcpy(reply+12, argv[1], clen);
+			memcpy(reply+13+clen, argv[2], ulen);
+			memcpy(reply+14+clen+ulen, bytes2, 5);
+			memcpy(reply+19+clen+ulen, (const char*) TITLE, tlen);
+			memcpy(reply+20+clen+ulen+tlen, &min_w, 2);
+			memcpy(reply+22+clen+ulen+tlen, &min_h, 2);
+			memcpy(reply+24+clen+ulen+tlen, &max_w, 2);
+			memcpy(reply+26+clen+ulen+tlen, &max_h, 2);
+			memcpy(reply+28+clen+ulen+tlen, &width, 2);
+			memcpy(reply+30+clen+ulen+tlen, &height, 2);
+			memcpy(reply+32+clen+ulen+tlen, &max, 2);
+			memcpy(reply+36+clen+ulen+tlen, &maximised_w_offset, 2);
+			memcpy(reply+40+clen+ulen+tlen, &maximised_h_offset, 2);
+			memcpy(reply+44+clen+ulen+tlen, &maximised_w, 2);
+			memcpy(reply+48+clen+ulen+tlen, &maximised_h, 2);
 		
 			// send reply
+			write(fd_out, &reply_size, 2);
 			write(fd_out, reply, reply_size);
 			print_message("SENT: ", reply, reply_size);
 		} else if (id == 0x0020){
