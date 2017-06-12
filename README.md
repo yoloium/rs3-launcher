@@ -25,7 +25,7 @@ and then follow the instructions below.
 ```
 git clone https://github.com/yoloium/rs3-launcher.git
 cd rs3-launcher
-gcc launcher.c -o launcher -lpthread
+gcc launcher.c -o launcher
 ```
 DO NOT RUN THE CLIENT YET
 Open rs3-launcher in your favourite text editor e.g.
