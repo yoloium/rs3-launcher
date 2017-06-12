@@ -1,14 +1,14 @@
 #!/bin/sh
 
-CACHE_FOLDER="$HOME/Jagex/RuneScape" # Where to store client cache
+CACHE_FOLDER="$HOME/Jagex" # Where to store client cache
 USER_FOLDER="$HOME/Jagex" # where to store client settings
 PID=$(printf "%X" $$) # Pid to use to identify client instance
 
-cd "$(dirname $0)" || exit
-
 # Make the nesessary folders / game client if they don't exist already.
-mkdir -p "$USER_FOLDER" "$CACHE_FOLDER"
-touch librs2client.so
+mkdir -p "$USER_FOLDER/launcher" "$CACHE_FOLDER"
+
+client="$USER_FOLDER/launcher/rs2client"
+touch "$client"
 
 # Download config
 GAME_CONFIG=$(curl -s -L 'http://runescape.com/k=5/jav_config.ws?binaryType=4') 
@@ -17,25 +17,25 @@ GAME_CONFIG=$(curl -s -L 'http://runescape.com/k=5/jav_config.ws?binaryType=4')
 LATEST=$(echo "$GAME_CONFIG" | sed -n 's/^download_crc_0=//p')
 
 # Calculate hash of the current game file
-CURRENT=$(rhash --printf=%c librs2client.so)
+CURRENT=$(rhash --printf=%c "$client")
 
 # Check to see if we have the latest version
 if [ "$((0x$CURRENT))" != "$LATEST" ] ; then
 	# Download file
 	CODEBASE=$(echo "$GAME_CONFIG" | sed -n 's/^codebase=//p')
-        curl -L -o 'librs2client.so.lzma' "${CODEBASE}client?binaryType=4&fileName=librs2client.so&crc=$LATEST"
+        curl -L -o "$client.lzma" "${CODEBASE}client?binaryType=4&fileName=rs2client&crc=$LATEST"
 	# Decompress file
-        7z e librs2client.so.lzma -y
+        7z e "$client.lzma" -y
+	chmod +x "$client"
 	# Check hash of newly downloaded client
-	CURRENT=$(rhash --printf=%c librs2client.so)
+	CURRENT=$(rhash --printf=%c "$client")
 	if  [ "$((0x$CURRENT))" != "$LATEST" ]; then
-                echo 'librs2client.so was downloaded and extracted incorrectly; exiting...' && exit 1
+                echo 'rs2client was downloaded and extracted incorrectly; exiting...' && exit 1
         fi
 fi
 
-# Generate launch parameters; filter for 'param', print: "$2" "$3" using AWK. Then replace all newlines with spaces
-PARAMS="$(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}') launcher $PID"
-PARAMS="$(echo $PARAMS | tr '\n' ' ')"
+PARAMS="$client $(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}') launcher $PID"
+echo $PARAMS
 
-# Launch binary, passing params to it 	
-./launcher "$PID" "$CACHE_FOLDER" "$USER_FOLDER" "$PARAMS"
+# Launch launcher
+echo "$PARAMS" | xargs $(dirname $0)/launcher "$CACHE_FOLDER" "$USER_FOLDER"
