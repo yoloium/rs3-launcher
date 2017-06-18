@@ -16,7 +16,7 @@ current=$(7z h "$client" | grep 'CRC32  for data:' | cut -d ' ' -f 18)
 # Check to see if we have the latest version
 if [ "$((0x$current))" != "$latest" ] ; then
 	# Enable HTTPS download URL, then download the client
-	codebase=$(echo "$config" | sed -n 's/http/https/g; s/^codebase=//p;')
+	codebase=$(echo "$config" | sed -n 's/http/https/g; s/^codebase=//p')
         curl -L -o "${client}.lzma" "${codebase}client?binaryType=4&fileName=rs2client&crc=${latest}"
 
 	# Decompress file, and make it executable
