@@ -1,42 +1,33 @@
 #!/bin/sh
 
-CACHE_FOLDER="$HOME/Jagex" # Where to store client cache
-USER_FOLDER="$HOME/Jagex" # where to store client settings
-PID=$(printf "%X" $$) # Pid to use to identify client instance
+# Configuration
+game_folder="$HOME/Jagex"
+client="${game_folder}/launcher/rs2client"
 
-# Make the nesessary folders / game client if they don't exist already.
-mkdir -p "$USER_FOLDER/launcher" "$CACHE_FOLDER"
+# Download game config
+config=$(curl -s -L 'https://runescape.com/k=5/jav_config.ws?binaryType=4')
+ 
+# Extract latest crc32 hash
+latest=$(echo "$config" | sed -n 's/^download_crc_0=//p')
 
-client="$USER_FOLDER/launcher/rs2client"
-touch "$client"
-
-# Download config
-GAME_CONFIG=$(curl -s -L 'http://runescape.com/k=5/jav_config.ws?binaryType=4') 
-
-# Find the latest crc32
-LATEST=$(echo "$GAME_CONFIG" | sed -n 's/^download_crc_0=//p')
-
-# Calculate hash of the current game file
-CURRENT=$(rhash --printf=%c "$client")
+# Generate hash for the local client
+current=$(7z h "$client" | grep 'CRC32  for data:' | cut -d ' ' -f 18)
 
 # Check to see if we have the latest version
-if [ "$((0x$CURRENT))" != "$LATEST" ] ; then
-	# Download file
-	CODEBASE=$(echo "$GAME_CONFIG" | sed -n 's/^codebase=//p')
-        curl -L -o "$client.lzma" "${CODEBASE}client?binaryType=4&fileName=rs2client&crc=$LATEST"
-	# Decompress file
-        7z e "$client.lzma" -y
-	chmod +x "$client"
-	# Check hash of newly downloaded client
-	CURRENT=$(rhash --printf=%c "$client")
-	if  [ "$((0x$CURRENT))" != "$LATEST" ]; then
-                echo 'rs2client was downloaded and extracted incorrectly; exiting...' && exit 1
-        fi
+if [ "$((0x$current))" != "$latest" ] ; then
+	# Enable HTTPS download URL, then download the client
+	codebase=$(echo "$config" | sed -n 's/http/https/g; s/^codebase=//p;')
+        curl -L -o "${client}.lzma" "${codebase}client?binaryType=4&fileName=rs2client&crc=${latest}"
+
+	# Decompress file, and make it executable
+        7z e "${client}.lzma" -y && chmod +x "$client"
 fi
 
-PARAMS="$(echo "$GAME_CONFIG" | awk -P -F= -v x="\"" '$1=="param" {print x$2x, x$3x}') launcher $PID"
+# Generate launch parameters
+params="$(echo "$config" | grep 'param' | cut -d= -f2- | sed 's|=|" "|; s|.*|"&"|') launcher $$" 
 
-# Launch launcher
-$(dirname $0)/launcher "$CACHE_FOLDER" "$USER_FOLDER" "$PID" &
+# Launch the launcher
+"$(dirname $0)/launcher" "$game_folder" "/tmp/RS2LauncherConnection_${$}_i" "/tmp/RS2LauncherConnection_${$}_o" &
 
-echo "$PARAMS" | xargs $client
+# Launch the client
+echo "$params" | xargs "$client"
