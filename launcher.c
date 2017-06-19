@@ -1,13 +1,10 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <endian.h>
 #include <unistd.h>
-#include <limits.h>
 
 #define TITLE "RuneScape"
 #define MIN_WIDTH 765
@@ -49,13 +46,13 @@ int main(int argc, char *argv[]){
 		uint16_t msg_len = le16toh(*(uint16_t *) buf);
 		
 		if(msg_len < 2){
-			printf("Message size recieved is invalid.\n");
+			printf("ERROR: Message size recieved is invalid.\n");
 			break;
 		}
 		
 		char msg[msg_len];
 		if(!read(fd_in, msg, msg_len)){
-			printf("Failed to read a message.\n");
+			printf("ERROR: Failed to read a message.\n");
 			break;
 		}
 
