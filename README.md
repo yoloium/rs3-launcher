@@ -4,42 +4,42 @@ This project is a minimalistic launcher for Runescape 3 (NXT). Compatible with v
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
 This project has been tested on Debian and Void GNU/Linux.
 
-### Prerequisities
+## Prerequisities
 
-The shell script requies the following programs
+The shell script requies the following programs:
 ```
-rhash - rhash - used to verify that files were downloaded correctly
 curl - curl - used to download files
-7zip - p7zip - used to compress/decompress files
+7zip - p7zip-full - used to compress/decompress files
+```
+And compiling the program
+```
 gcc - gcc - compile the program
 ```
 
 To run on a fresh ubuntu install you should be able to run:
 ```
-sudo apt install rhash curl p7zip-full gcc git libsdl2-2.0-0
+sudo apt install curl p7zip-full gcc git libsdl2-2.0-0
 ```
 and then follow the instructions below.
 
-
-### Installing
+## Installing
 ```
-git clone https://github.com/yoloium/rs3-launcher.git
+git clone https://github.com/yoloium/rs3-launcher.git # Clone repository
 cd rs3-launcher
+vim launcher.c # Edit the window dimensions (width and height etc) my modifying the integer values in the #define at the top
+gcc launcher.c -o launcher # compile the file, pass the '-Os' for a smaller file
+mkdir -p $HOME/Jagex/launcher # Create nessessary files
+touch $HOME/Jagex/launcher/rs2client # Create empty file so that it can be checksum'd.
 ```
-Now modify launcher.c and rs3-launcher in your favourite text editor e.g.
-```vim launcher.c```
-And change any of the window numbers from lines 75 to 82.
-In the script you can edit the top lines of code to point to where you have your game cache and user information located. By default they use the official client's defaults.
-Now compile the c file
-```gcc launcher.c -o launcher```
-When the configuration looks good, you can run the script;
+
+Now we can run the script
 ```
 ./rs3-launcher
 ```
 
-If the game window doesn't open, make sure that all dependencies are met with the newly downloaded client with:
+If the game window doesn't open, make sure that all dependencies of the newly downloaded client are met:
 ```
-ldd librs2client.so | grep 'not found'
+ldd ~/Jagex/launcher/rs2client | grep 'not found'
 ```
 
 ## Fixing issues
