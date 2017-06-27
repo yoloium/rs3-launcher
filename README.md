@@ -26,8 +26,8 @@ and then follow the instructions below.
 ```
 git clone https://github.com/yoloium/rs3-launcher.git # Clone repository
 cd rs3-launcher
-vim launcher.c # Edit the window dimensions (width and height etc) my modifying the integer values in the #define at the top
-gcc launcher.c -o launcher # compile the file, pass the '-Os' for a smaller file
+vim launcher.c # Edit the window dimensions (width and height etc) by modifying the integer values in the #define at the top
+gcc launcher.c -o launcher # compile the file, pass the '-Os' flag for a smaller file.
 mkdir -p $HOME/Jagex/launcher # Create nessessary files
 touch $HOME/Jagex/launcher/rs2client # Create empty file so that it can be checksum'd.
 ```
