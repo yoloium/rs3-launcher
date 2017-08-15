@@ -3,6 +3,8 @@
 # Configuration
 game_folder="$HOME/Jagex"
 client="${game_folder}/launcher/rs2client"
+in_fifo="/tmp/RS2LauncherConnection_${$}_i"
+out_fifo="/tmp/RS2LauncherConnection_${$}_o"
 
 # Download game config
 config=$(curl -s -L 'https://runescape.com/k=5/jav_config.ws?binaryType=4')
@@ -26,8 +28,14 @@ fi
 # Generate launch parameters
 params="$(echo "$config" | grep 'param' | cut -d= -f2- | sed 's|=|" "|; s|.*|"&"|') launcher $$" 
 
+# Create FIFOs
+mkfifo -m 600 "$in_fifo" "$out_fifo"
+
 # Launch the launcher
-"$(dirname $0)/launcher" "$game_folder" "/tmp/RS2LauncherConnection_${$}_i" "/tmp/RS2LauncherConnection_${$}_o" &
+"$(dirname $0)/launcher" "$game_folder" "$in_fifo" "$out_fifo" &
 
 # Launch the client
 echo "$params" | xargs "$client"
+
+# Delete FIFOs
+rm "$in_fifo" "$out_fifo"

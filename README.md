@@ -54,7 +54,7 @@ NOTE if you have an older graphics card, you can replace '3.0' with '2.1' so tha
 
 ## Contributing
 
-Will consider accepting pull requests. But don't expect me to look here. PM me in game or something to let me know; RSN = yoloium
+Will consider accepting pull requests. But don't expect me to look here frequently. PM me in game or something to let me know; RSN = yoloium
 
 ## Alternatives
 1. Python + shell equivalent: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a. (not updated for 2.2.4)
@@ -67,4 +67,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-syldrathecat for https://github.com/syldrathecat/nxtlauncher. This project served as inspiration this project. It provides a lot of answers on how the client executes. FYI that project is very overcomplicated and over-engineered.
+syldrathecat for https://github.com/syldrathecat/nxtlauncher. This project served as inspiration this project. It provides a lot of answers on how the client executes.
