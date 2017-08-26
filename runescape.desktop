@@ -6,7 +6,7 @@ GenericName=RuneScape
 Comment=RuneScape - A Free MMORPG from Jagex Ltd.
 Icon=runescape
 Terminal=false
-Exec=/home/lx/testing/rs3-launcher/rs3-launcher %u
+Exec=directory/rs3-launcher %u
 Categories=Game;
 MimeType=x-scheme-handler/rs-launch;x-scheme-handler/rs-launchs
 
