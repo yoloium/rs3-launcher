@@ -2,7 +2,7 @@
 
 This project is a minimalistic launcher for Runescape 3 (NXT). Compatible with v2.2.4.
 It uses a (portable, /bin/sh) shell script to download the game config, update files and then run the game. 
-This project has been tested on Debian and Void GNU/Linux.
+This project has been tested on Debian, Void and Solus GNU + Linux.
 
 ## Prerequisities
 
@@ -20,7 +20,7 @@ To run on a fresh ubuntu install you should be able to run:
 ```
 sudo apt install curl p7zip-full gcc git libsdl2-2.0-0
 ```
-and then follow the instructions below.
+and then follow the instructions below. (except for installing the old version of libGLEW)
 
 ## Installing
 ```
@@ -31,8 +31,20 @@ gcc launcher.c -o launcher # compile the file, pass the '-Os' flag for a smaller
 mkdir -p $HOME/Jagex/launcher # Create nessessary files
 touch $HOME/Jagex/launcher/rs2client # Create empty file so that it can be checksum'd.
 ```
+Now would be a good time to add a desktop entry;
+```
+vim runescape.desktop
+```
+and edit the 'Exec' Line to point to the script wherever you have it currently - you must use absolute paths, no $HOME or ~/ ! You can cheat with:
+```
+sed -i "s:directory:$PWD:g" runescape.desktop
+```
+Then when it is corretly edited, copy to the correct directory (requires root);
+```
+sudo cp runescape.desktop /usr/share/applications/
+```
 
-Now we can run the script
+Now we can run the script, or launch from our Desktop environment's menu;
 ```
 ./rs3-launcher
 ```

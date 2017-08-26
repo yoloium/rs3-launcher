@@ -1,8 +1,8 @@
 #!/bin/sh
-
 # Configuration
 game_folder="$HOME/Jagex"
 client="${game_folder}/launcher/rs2client"
+
 in_fifo="/tmp/RS2LauncherConnection_${$}_i"
 out_fifo="/tmp/RS2LauncherConnection_${$}_o"
 
@@ -13,16 +13,15 @@ config=$(curl -s -L 'https://runescape.com/k=5/jav_config.ws?binaryType=4')
 latest=$(echo "$config" | sed -n 's/^download_crc_0=//p')
 
 # Generate hash for the local client
-current=$(7z h "$client" | grep 'CRC32  for data:' | cut -d ' ' -f 18)
+current=$(7z h "$client" | grep 'CRC32  for data:' | cut -d' ' -f18)
 
 # Check to see if we have the latest version
 if [ "$((0x$current))" != "$latest" ] ; then
-	# Enable HTTPS download URL, then download the client
-	codebase=$(echo "$config" | sed -n 's/http/https/g; s/^codebase=//p')
-        curl -L -o "${client}.lzma" "${codebase}client?binaryType=4&fileName=rs2client&crc=${latest}"
+	# Download the client to /tmp
+        curl -L -o '/tmp/rs2client.lzma' "https://world16.runescape.com/k=5/client?binaryType=4&fileName=rs2client&crc=${latest}"
 
 	# Decompress file, and make it executable
-        7z e "${client}.lzma" -o"${game_folder}/launcher" -aoa && chmod +x "$client"
+        7z e '/tmp/rs2client.lzma' -o"${game_folder}/launcher" -aoa && chmod +x "$client"
 fi
 
 # Generate launch parameters
