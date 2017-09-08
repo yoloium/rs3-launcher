@@ -18,14 +18,11 @@ current=$(7z h "$client" | grep 'CRC32  for data:' | cut -d' ' -f18)
 # Check to see if we have the latest version
 if [ "$((0x$current))" != "$latest" ] ; then
 	# Download the client to /tmp
-        curl -L -o '/tmp/rs2client.lzma' "https://world16.runescape.com/k=5/client?binaryType=4&fileName=rs2client&crc=${latest}"
+        curl -L -o "$client.lzma" "https://world16.runescape.com/k=5/client?binaryType=4&fileName=rs2client&crc=${latest}"
 
 	# Decompress file, and make it executable
-        7z e '/tmp/rs2client.lzma' -o"${game_folder}/launcher" -aoa && chmod +x "$client"
+        7z x "$client.lzma" -o"$HOME/Jagex/launcher" -aoa && chmod +x "$client"
 fi
-
-# Generate launch parameters
-params="$(echo "$config" | grep 'param' | cut -d= -f2- | sed 's|=|" "|; s|.*|"&"|') launcher $$" 
 
 # Create FIFOs
 mkfifo -m 600 "$in_fifo" "$out_fifo"
@@ -33,8 +30,8 @@ mkfifo -m 600 "$in_fifo" "$out_fifo"
 # Launch the launcher
 "$(dirname $0)/launcher" "$game_folder" "$in_fifo" "$out_fifo" &
 
-# Launch the client
-echo "$params" | xargs "$client"
+# Generate launch parameters, then launch the client
+echo "$(echo "$config" | grep 'param' | cut -d= -f2- | sed 's|=|" "|; s|.*|"&"|') launcher $$" | xargs "$client"
 
 # Delete FIFOs
 rm "$in_fifo" "$out_fifo"
