@@ -69,7 +69,7 @@ NOTE if you have an older graphics card, you can replace '3.0' with '2.1' so tha
 Will consider accepting pull requests. But don't expect me to look here frequently. PM me in game or something to let me know; RSN = yoloium
 
 ## Alternatives
-1. Python + shell equivalent: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a. (not updated for 2.2.4)
+1. Single shell script but python based RS3 NXT Launcher: https://gist.github.com/yoloium/3b2ece56c33cf6dc013e75cc64e4124a. (v2.2.4 compatible)
 2. Minimal (legacy) java client launcher: https://gist.github.com/yoloium/0dd28b23da8cf1d9c409972141137967. NOTE: read comment for RS3 usage.
 3. (bloated) C++ equivalent: https://github.com/syldrathecat/nxtlauncher
 
