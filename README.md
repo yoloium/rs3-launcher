@@ -1,3 +1,5 @@
+# SHELL ONLY TEST - DOES NOT WORK ATM
+
 # Runescape 3 NXT launcher (linux)
 
 This project is a minimalistic launcher for Runescape 3 (NXT). Compatible with v2.2.4.
