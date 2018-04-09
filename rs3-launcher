@@ -1,10 +1,21 @@
-#!/bin/sh
+#!/bin/bash
+
 # Configuration
 game_folder="$HOME/Jagex"
-client="${game_folder}/launcher/rs2client"
+title="RuneScape"
+min_w=765
+min_h=540
+max_w=3840
+max_h=2160
+width=1366
+height=768
 
+client="${game_folder}/launcher/rs2client"
 in_fifo="/tmp/RS2LauncherConnection_${$}_i"
 out_fifo="/tmp/RS2LauncherConnection_${$}_o"
+
+# Remove FIFOs when program exits
+trap 'rm $in_fifo $out_fifo' EXIT
 
 # Download game config
 config=$(curl -s -L 'https://runescape.com/k=5/jav_config.ws?binaryType=4')
@@ -27,11 +38,46 @@ fi
 # Create FIFOs
 mkfifo -m 600 "$in_fifo" "$out_fifo"
 
-# Launch the launcher
-"$(dirname $0)/launcher" "$game_folder" "$in_fifo" "$out_fifo" &
+# num to big endian
+hexn() {
+        var=$(printf "%x\n" "$1")
+        echo "\\x0${var:0:1}\\x${var:1:3}"
+}
+# num to little endian
+hexi(){
+	var=$(printf "%x\n" "$1")
+	echo "\\x$var\\x00"
+}
+# string to hex
+hexs() {
+        var=$(echo "$1" | xxd -p)
+        echo "${var::-2}00" | sed -e 's|..|\\x&|g'
+}
+
+packet="\0\x01\0\x04\0\0\0\0\0\0\0\0$(hexs $game_folder)$(hexs $game_folder)\0\x04\0\0\x07$(hexs $title)$(hexn $min_w)$(hexn $min_h)$(hexn $max_w)$(hexn $max_h)$(hexn $width)$(hexn $height)"
+pkt_len="$((${#game_folder} * 2 + ${#title} + 32))"
+pkt_len_data=$(hexi $pkt_len)
+sent="no"
+
+count=0
+read_fifo(){
+	rm data
+	touch data
+	while read -r -d $'\0' line ; do
+		# hacky solution
+		if [ $count -lt 5 ] ; then
+			count=$((count+1))
+		fi
+		echo "got some data"
+		if [ $count -eq 5 ] ; then
+			echo "trying to send data to $out_fifo"
+			echo -n -e "$pkt_len_data" > "$out_fifo"
+			echo -n -e "$packet" > "$out_fifo"
+		fi
+	done < "$in_fifo"
+}
+
+read_fifo &
 
 # Generate launch parameters, then launch the client
 echo "$(echo "$config" | grep 'param' | cut -d= -f2- | sed 's|=|" "|; s|.*|"&"|') launcher $$" | xargs "$client"
-
-# Delete FIFOs
-rm "$in_fifo" "$out_fifo"
