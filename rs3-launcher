@@ -21,7 +21,7 @@ if [ "$((0x$current))" != "$latest" ] ; then
         curl -L -o "$client.lzma" "https://world16.runescape.com/k=5/client?binaryType=4&fileName=rs2client&crc=${latest}"
 
 	# Decompress file, and make it executable
-        7z x "$client.lzma" -o"$HOME/Jagex/launcher" -aoa && chmod +x "$client"
+        7z x "$client.lzma" -o"${game_folder}/launcher" -aoa && chmod +x "$client"
 fi
 
 # Create FIFOs
